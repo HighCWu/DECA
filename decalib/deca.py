@@ -250,6 +250,9 @@ class DECA(nn.Module):
             }
             if self.cfg.model.use_tex:
                 visdict['rendered_images'] = ops['images']
+                visdict['rendered_images_gt'] = self.render(
+                    verts, trans_verts, uv_texture_gt, codedict['light']
+                )['images']
 
             return opdict, visdict
 

@@ -86,7 +86,7 @@ def main(args):
             opdict = util.dict_tensor2npy(opdict)
             savemat(os.path.join(savefolder, name, save_type, name + '.mat'), opdict)
         if args.saveImages:
-            for vis_name in ['inputs', 'rendered_images', 'albedo_images', 'shape_images', 'shape_detail_images']:
+            for vis_name in ['inputs', 'rendered_images', 'rendered_images_gt', 'albedo_images', 'shape_images', 'shape_detail_images']:
                 if vis_name not in visdict.keys():
                     continue
                 image  =util.tensor2image(visdict[vis_name][0])
