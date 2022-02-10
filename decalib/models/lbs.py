@@ -244,7 +244,7 @@ def vertices2joints(J_regressor, vertices):
         The location of the joints
     '''
 
-    return torch.einsum('bik,ji->bjk', [vertices, J_regressor])
+    return (vertices.transpose(2,1) @ J_regressor.transpose(1,0)[None].repeat(vertices.shape[0],1,1)).transpose(2,1)
 
 
 def blend_shapes(betas, shape_disps):
@@ -267,8 +267,10 @@ def blend_shapes(betas, shape_disps):
     # Displacement[b, m, k] = sum_{l} betas[b, l] * shape_disps[m, k, l]
     # i.e. Multiply each shape displacement by its corresponding beta and
     # then sum them.
-    blend_shape = torch.einsum('bl,mkl->bmk', [betas, shape_disps])
-    return blend_shape
+    b, l = betas.shape
+    m, k = shape_disps.shape[:2]
+    blend_shape = betas @ shape_disps.view(-1,l).transpose(1,0)
+    return blend_shape.view(b, m, k)
 
 
 def batch_rodrigues(rot_vecs, epsilon=1e-8, dtype=torch.float32):
@@ -345,7 +347,10 @@ def batch_rigid_transform(rot_mats, joints, parents, dtype=torch.float32):
     joints = torch.unsqueeze(joints, dim=-1)
 
     rel_joints = joints.clone()
-    rel_joints[:, 1:] -= joints[:, parents[1:]]
+    rel_joints0 = rel_joints[:, :1]
+    rel_joints1 = rel_joints[:, 1:] - joints.index_select(1, parents[1:].view(-1)).view(
+        joints.shape[0], *parents[1:].shape, 3, 1)
+    rel_joints = torch.cat([rel_joints0, rel_joints1], 1)
 
     # transforms_mat = transform_mat(
     #     rot_mats.view(-1, 3, 3),

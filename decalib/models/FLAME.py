@@ -260,5 +260,5 @@ class FLAMETex(nn.Module):
         texture = self.texture_mean + (self.texture_basis*texcode[:,None,:]).sum(-1)
         texture = texture.reshape(texcode.shape[0], 512, 512, 3).permute(0,3,1,2)
         texture = F.interpolate(texture, [256, 256])
-        texture = texture[:,[2,1,0], :,:]
+        texture = texture.index_select(1, torch.tensor([2,1,0], dtype=torch.long, device=texture.device))
         return texture

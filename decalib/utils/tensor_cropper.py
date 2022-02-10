@@ -130,7 +130,8 @@ def transform_points(points, tform, points_scale=None, out_scale=None):
                     tform
                     ) 
     if out_scale: # h,w of output image size
-        trans_points_2d[:,:,0] = trans_points_2d[:,:,0]/out_scale[1]*2 - 1
-        trans_points_2d[:,:,1] = trans_points_2d[:,:,1]/out_scale[0]*2 - 1
+        trans_points_2d0 = trans_points_2d[:,:,0:1]/out_scale[1]*2 - 1
+        trans_points_2d1 = trans_points_2d[:,:,1:2]/out_scale[1]*2 - 1
+        trans_points_2d = torch.cat([trans_points_2d0, trans_points_2d1, trans_points_2d[:,:,2:]], dim=-1)
     trans_points = torch.cat([trans_points_2d[:,:,:2], points[:,:,2:]], dim=-1)
     return trans_points

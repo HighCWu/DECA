@@ -231,8 +231,8 @@ std::vector<at::Tensor> forward_rasterize_cuda(
     at::Tensor depth_buffer,
     at::Tensor triangle_buffer,
     at::Tensor baryw_buffer,
-    int h,
-    int w){
+    int64_t h,
+    int64_t w){
 
     const auto batch_size = face_vertices.size(0);
     const auto ntri = face_vertices.size(1);
@@ -275,8 +275,8 @@ std::vector<at::Tensor> forward_rasterize_colors_cuda(
     at::Tensor depth_buffer,
     at::Tensor triangle_buffer,
     at::Tensor images,
-    int h,
-    int w){
+    int64_t h,
+    int64_t w){
 
     const auto batch_size = face_vertices.size(0);
     const auto ntri = face_vertices.size(1);

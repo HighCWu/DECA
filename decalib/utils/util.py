@@ -241,10 +241,10 @@ def face_vertices(vertices, faces):
     bs, nv = vertices.shape[:2]
     bs, nf = faces.shape[:2]
     device = vertices.device
-    faces = faces + (torch.arange(bs, dtype=torch.int32).to(device) * nv)[:, None, None]
+    faces = faces + (torch.arange(bs, dtype=torch.int32, device=device) * nv)[:, None, None]
     vertices = vertices.reshape((bs * nv, 3))
     # pytorch only supports long and byte tensors for indexing
-    return vertices[faces.long()]
+    return vertices.index_select(0, faces.long().reshape(-1)).reshape(*faces.shape, 3)
     
 def vertex_normals(vertices, faces):
     """
@@ -262,18 +262,29 @@ def vertex_normals(vertices, faces):
     device = vertices.device
     normals = torch.zeros(bs * nv, 3).to(device)
 
-    faces = faces + (torch.arange(bs, dtype=torch.int32).to(device) * nv)[:, None, None] # expanded faces
-    vertices_faces = vertices.reshape((bs * nv, 3))[faces.long()]
+    faces = faces + (torch.arange(bs, dtype=torch.int32, device=device) * nv)[:, None, None] # expanded faces
+    vertices_faces = vertices.reshape((bs * nv, 3)).index_select(0, faces.long().reshape(-1)).reshape(
+        *faces.shape, 3)
 
     faces = faces.reshape(-1, 3)
     vertices_faces = vertices_faces.reshape(-1, 3, 3)
 
-    normals.index_add_(0, faces[:, 1].long(), 
-                       torch.cross(vertices_faces[:, 2] - vertices_faces[:, 1], vertices_faces[:, 0] - vertices_faces[:, 1]))
-    normals.index_add_(0, faces[:, 2].long(), 
-                       torch.cross(vertices_faces[:, 0] - vertices_faces[:, 2], vertices_faces[:, 1] - vertices_faces[:, 2]))
-    normals.index_add_(0, faces[:, 0].long(),
-                       torch.cross(vertices_faces[:, 1] - vertices_faces[:, 0], vertices_faces[:, 2] - vertices_faces[:, 0]))
+    def cross(tu, tv):
+        return torch.stack([
+            tu[:,1]*tv[:,2] - tu[:,2]*tv[:,1],
+            tu[:,2]*tv[:,0] - tu[:,0]*tv[:,2],
+            tu[:,0]*tv[:,1] - tu[:,1]*tv[:,0]], dim=-1)
+
+    def index_add(self, dim, index, tensor):
+        index = index[...,None].expand_as(tensor)
+        return self + self.scatter(dim, index, tensor)
+
+    normals = index_add(normals, 0, faces[:, 1].long(), 
+                       cross(vertices_faces[:, 2] - vertices_faces[:, 1], vertices_faces[:, 0] - vertices_faces[:, 1]))
+    normals = index_add(normals, 0, faces[:, 2].long(), 
+                       cross(vertices_faces[:, 0] - vertices_faces[:, 2], vertices_faces[:, 1] - vertices_faces[:, 2]))
+    normals = index_add(normals, 0, faces[:, 0].long(),
+                       cross(vertices_faces[:, 1] - vertices_faces[:, 0], vertices_faces[:, 2] - vertices_faces[:, 0]))
 
     normals = F.normalize(normals, eps=1e-6, dim=1)
     normals = normals.reshape((bs, nv, 3))
