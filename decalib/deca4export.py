@@ -232,7 +232,9 @@ class DECA(nn.Module):
         self.render.faces = visdict['faces']
         self.render.uvcoords = visdict['uvcoords']
         self.render.uvfaces = visdict['uvfaces']
+        self.render.face_uvcoords = util.face_vertices(self.render.uvcoords, self.render.uvfaces)
         self.uv_face_eye_mask = visdict['uv_face_eye_mask']
+
         verts = opdict['verts']
         trans_verts = visdict['trans_verts']
         albedo = opdict['albedo']
