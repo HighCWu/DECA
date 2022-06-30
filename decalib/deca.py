@@ -253,6 +253,10 @@ class DECA(nn.Module):
                 visdict['rendered_images_gt'] = self.render(
                     verts, trans_verts, uv_texture_gt, codedict['light']
                 )['images']
+                if render_orig and original_image is not None and tform is not None:
+                    visdict['rendered_images'] = self.render(
+                        verts, trans_verts, uv_texture[:,:3,:,:], codedict['light']
+                    )['images']
 
             return opdict, visdict
 
