@@ -5,6 +5,8 @@
 </p>
 <p align="center">input image, aligned reconstruction, animation with various poses & expressions<p align="center">
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YadiraF/DECA/blob/master/Detailed_Expression_Capture_and_Animation.ipynb?authuser=1)
+
 This is the official Pytorch implementation of DECA. 
 
 DECA reconstructs a 3D head model with detailed facial geometry from a single input image. The resulting 3D head model can be easily animated. Please refer to the [arXiv paper](https://arxiv.org/abs/2012.04012) for more details.
